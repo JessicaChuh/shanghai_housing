@@ -15,12 +15,6 @@ def clean_data(data):
     #Floor has some non-numerical values, set them to 0 and convert it all to int
     data['Floor'] = pd.to_numeric(data['Floor'], errors='coerce', downcast='integer').fillna(0)
 
-    int_col = ['Price', 'Size', 'N_Bedrooms', 'N_Bathrooms','Floor']
-    float_col = ['Longtitude', 'Latitude']
-
-    data[int_col] = data[int_col].astype('float32').astype('int32')
-    data[float_col] = data[float_col].astype('float32')
-
     # define regular expression pattern to match the different formats
     pattern = r'(?:First Posted\s+)?(\w+\s+\d+)'
     # extract month and day information as a string in the format 'Month day'
@@ -49,9 +43,9 @@ def clean_data(data):
     data.drop(index=[7696,19276],inplace=True)
 
     #will find a way to deal with these columns later
-    #data.drop(columns=['Listing_Id','Agency Commission',
-#                   'Main Window Facing', 'Area',
-#                   'Compound','Agent', 'Description', 'Refresh','Type'], inplace=True)
+    data.drop(columns=['Listing_Id','Agency Commission',
+                   'Main Window Facing', 'Area',
+                   'Compound','Agent', 'Description', 'Refresh','Type'], inplace=True)
     data.Furnished.replace('-', 'Unfurnished',inplace=True)
     data.Pets_allowed.fillna(0,inplace=True)
     data.drop(index=data[data.Metro.isna()].index, inplace=True)
