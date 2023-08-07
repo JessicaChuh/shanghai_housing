@@ -10,7 +10,7 @@ def clean_data(data):
            'Pets Allowed\n\n                                                                                    \n                                                false']
     data.drop(columns=to_drop, inplace=True)
 
-    data['Size'].replace(r"\D+", "", regex=True, inplace=True)
+    data['Size'] = data['Size'].replace(r"\D+", "", regex=True).astype(int)
 
     #Floor has some non-numerical values, set them to 0 and convert it all to int
     data['Floor'] = pd.to_numeric(data['Floor'], errors='coerce', downcast='integer').fillna(0)
