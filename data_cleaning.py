@@ -43,7 +43,7 @@ def clean_data(data):
     data.drop(index=[7696,19276],inplace=True)
 
     #will find a way to deal with these columns later
-    data.drop(columns=['Listing_Id','Agency Commission',
+    data.drop(columns=['Agency Commission',
                    'Main Window Facing', 'Area',
                    'Compound','Agent', 'Description', 'Refresh','Type'], inplace=True)
     data.Furnished.replace('-', 'Unfurnished',inplace=True)
