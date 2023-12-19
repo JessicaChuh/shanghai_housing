@@ -46,7 +46,8 @@ def extract_data(contents):
     df = pd.DataFrame(np.column_stack([Listing_Id,Price,Size,N_Bedrooms,N_Bathrooms]),
                     columns=['Listing_Id','Price','Size','N_Bedrooms', 'N_Bathrooms'])
 
-    return pd.concat((house_data, df), ignore_index=True)
+    return df
+    #return pd.concat((house_data, df), ignore_index=True)
 
 
 def page_data(data):
@@ -118,7 +119,7 @@ def page_data(data):
     return house_data
 
 def save_data():
-    house_data = extract_data(get_data(12,20))
+    house_data = extract_data(get_data(0,25))
     house_data = house_data.drop_duplicates()
     to_page = house_data[house_data['Type'].isnull()]
 
@@ -126,7 +127,6 @@ def save_data():
     house_data.set_index("extra_index", inplace=True)
 
     house_data = page_data(to_page)
-    house_data.to_csv("housing_data_full.csv", index=False)
+    #house_data.to_csv("housing_data_full.csv", index=False)
     print(f"Done, current size of database is {house_data.shape}")
-
-save_data()
+    return house_data
