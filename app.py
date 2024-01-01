@@ -4,16 +4,25 @@ import numpy as np
 import joblib
 
 model = joblib.load('random_forest_model.joblib')
-metro_encoder = joblib.load('metro_encoder.joblib')
-district_encoder = joblib.load('district_encoder.joblib')
+frame = pd.read_csv('frame.csv')
 
 def main():
     # User inputs
-    district = st.text_input("District", "")
-    metro = st.text_input("Metro", "")
+    # Number inputs
+    size = st.number_input("Size")
+    n_bedrooms = st.number_input("Number of Bedrooms")
+    n_bathrooms = st.number_input("Number of Bathrooms")
+    floor = st.number_input("Floor")
+
+    # lower text inputs
+    district = st.text_input("District").lower()
+    metro = st.text_input("Metro").lower()
+
+    # Checkbox inputs
+    furnished = st.checkbox("Furnished")
     balcony = st.checkbox("Balcony")
     oven = st.checkbox("Oven")
-    recently_renovated = st.checkbox("Recently renovated")
+    recently_renovated = st.checkbox("Recently Renovated")
     air_filter = st.checkbox("Air Filter")
     fitness_centers = st.checkbox("Fitness Centers")
     floor_heating = st.checkbox("Floor Heating")
@@ -24,42 +33,61 @@ def main():
     playground = st.checkbox("Playground")
     pool = st.checkbox("Pool")
     tennis_courts = st.checkbox("Tennis Courts")
-    wall_heating = st.checkbox("Wall heating")
+    wall_heating = st.checkbox("Wall Heating")
     water_filter = st.checkbox("Water Filter")
     pets_allowed = st.checkbox("Pets Allowed")
 
-    # Process user input using the encoders
-    district_encoded = district_encoder.transform([[district]])
-    metro_encoded = metro_encoder.transform([[metro]])
 
-    # Create a DataFrame with the processed input
-    input_data = pd.DataFrame(data=district_encoded, columns=district_encoder.get_feature_names_out(['District']))
-    input_data = pd.concat([input_data, pd.DataFrame(data=metro_encoded, columns=metro_encoder.get_feature_names_out(['Metro']))], axis=1)
+    # Submit button
+    if st.button("Submit"):
+        # Create a dictionary to store the user input
+        user_input = {
+            'Size': size,
+            'N_Bedrooms': n_bedrooms,
+            'N_Bathrooms': n_bathrooms,
+            'Floor': floor,
+            'Furnished': int(furnished),
+            'District': district,
+            'Metro': metro,
+            'Balcony': int(balcony),
+            'Oven': int(oven),
+            'Recently renovated': int(recently_renovated),
+            'Air Filter': int(air_filter),
+            'Fitness Centers': int(fitness_centers),
+            'Floor Heating': int(floor_heating),
+            'Garden': int(garden),
+            'Historic Building': int(historic_building),
+            'Large Storage Room': int(large_storage_room),
+            'Parking': int(parking),
+            'Playground': int(playground),
+            'Pool': int(pool),
+            'Tennis Courts': int(tennis_courts),
+            'Wall heating': int(wall_heating),
+            'Water Filter': int(water_filter),
+            'Pets_allowed': int(pets_allowed)
+        }
 
-    # Add additional user inputs to the DataFrame
-    input_data['Balcony'] = int(balcony)
-    input_data['Oven'] = int(oven)
-    input_data['Recently_renovated'] = int(recently_renovated)
-    input_data['Air_Filter'] = int(air_filter)
-    input_data['Fitness_Centers'] = int(fitness_centers)
-    input_data['Floor_Heating'] = int(floor_heating)
-    input_data['Garden'] = int(garden)
-    input_data['Historic_Building'] = int(historic_building)
-    input_data['Large_Storage_Room'] = int(large_storage_room)
-    input_data['Parking'] = int(parking)
-    input_data['Playground'] = int(playground)
-    input_data['Pool'] = int(pool)
-    input_data['Tennis_Courts'] = int(tennis_courts)
-    input_data['Wall_Heating'] = int(wall_heating)
-    input_data['Water_Filter'] = int(water_filter)
-    input_data['Pets_Allowed'] = int(pets_allowed)
 
-    # Make the prediction
-    prediction = model.predict(input_data)
+        # Create a DataFrame with the processed input
+        input_df = pd.DataFrame(user_input, index=[0])
+        frame[['Size', 'N_Bedrooms', 'N_Bathrooms', 'Floor', 'Furnished',
+                'Balcony', 'Oven', 'Recently renovated', 'Air Filter',
+                'Fitness Centers']] = input_df[['Size', 'N_Bedrooms', 'N_Bathrooms', 'Floor', 'Furnished', 'Balcony',
+            'Oven', 'Recently renovated', 'Air Filter', 'Fitness Centers']]
 
-    # Display the prediction
-    st.write("Predicted House Price:")
-    st.write(prediction)
+        district = "District_" + input_df['District']
+        metro = "Metro_" + input_df['Metro']
+        frame[district] = 1
+        frame[metro] = 1
+
+
+        # Make the prediction
+        prediction = model.predict(frame)[0]
+
+
+        # Display the prediction
+        st.write("Predicted House Price:")
+        st.write(prediction)
 
 if __name__ == '__main__':
     main()
