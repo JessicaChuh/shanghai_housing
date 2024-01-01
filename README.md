@@ -1,4 +1,5 @@
-House Price Prediction Model
+#House Price Prediction Model
+
 After 7 years in the real estate industry, I transitioned my career to data science, merging my domain expertise with newfound skills. This project showcases a powerful house price prediction model that combines my in-depth knowledge of the real estate market with advanced data science techniques.
 
 Description
