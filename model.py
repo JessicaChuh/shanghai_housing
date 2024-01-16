@@ -15,6 +15,7 @@ from sklearn import set_config; set_config(display='diagram')
 from data_cleaning import clean_data
 import joblib
 
+
 data = pd.read_csv('housing_data_full.csv',low_memory=False)
 data = data.drop_duplicates()
 data = clean_data(data)
@@ -80,7 +81,7 @@ rf_predictions = rf_model.predict(X_test)
 dt_predictions = dt_model.predict(X_test)
 xgb_predictions = xgb_model.predict(X_test)
 
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+
 
 def calculate_mape(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
@@ -118,8 +119,6 @@ print("\nXGBoost:")
 print("RMSE:", xgb_rmse)
 print("MAE:", xgb_mae)
 print("MAPE:", xgb_mape)
-
-
 
 # Save the trained model
 joblib.dump(rf_model, 'random_forest_model.joblib')
