@@ -7,6 +7,7 @@ import re
 baseurl = 'https://www.smartshanghai.com/housing/apartments-rent'
 house_data = pd.read_csv("housing_data_full.csv",low_memory=False)
 
+
 def get_data(a,b):
     contents = []
     for page in range(a,b):
