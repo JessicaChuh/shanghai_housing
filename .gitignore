@@ -130,5 +130,7 @@ dmypy.json
 
 agents.csv
 apts.csv
-housing_data.full.csv
+housing_data_full.csv
 config.py
+20240814.csv
+20240815.csv
