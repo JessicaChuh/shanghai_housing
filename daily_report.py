@@ -65,6 +65,7 @@ daily_data = daily_data.drop_duplicates().reset_index(drop=True)
 columns = []
 values = []
 amenities_data = []
+views_data = []
 
 for list_id in daily_data['listing_id']:
     response = requests.get(f'{baseurl}/{list_id}')
@@ -96,20 +97,27 @@ for list_id in daily_data['listing_id']:
         amenities_dict['listing_id'] = list_id
         amenities_data.append(amenities_dict)
 
+        # Extract views information
+        views = re.findall('\d+', soup_info.find('div', class_="posted-and-views").text.split('·')[-1])[0]
+        views_data.append({'listing_id': list_id, 'views': views})
+
     else:
         print(f"Failed to retrieve data for listing ID: {list_id}")
 
-# Create DataFrames for values and amenities data
+# Create DataFrames for values, amenities, and views data
 values_df = pd.DataFrame(values)
 amenities_df = pd.DataFrame(amenities_data)
+views_df = pd.DataFrame(views_data)
 
 # Merge the amenities DataFrame with the original DataFrame on 'listing_id'
 merged_df = pd.merge(daily_data, amenities_df, on='listing_id', how='left')
 
+# Merge the views DataFrame with the merged DataFrame on 'listing_id'
+merged_df = pd.merge(merged_df, views_df, on='listing_id', how='left')
+
 # Concatenate the merged DataFrame with the values DataFrame
 final_df = pd.concat([merged_df, values_df], axis=1)
 final_df.columns = final_df.columns.str.replace("\n", "").str.replace(" ", "")
-
 
 
 #Data cleaning
