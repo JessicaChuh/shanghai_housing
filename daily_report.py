@@ -32,7 +32,7 @@ def get_recent_listing_ids():
                 listing_time_element = content[i].find('div', class_='address').text.strip()
                 time_diff = convert_time_indicator(listing_time_element)
 
-                if time_diff <= timedelta(hours=23):
+                if time_diff <= timedelta(weeks=1):
                     Listing_id.append(content[i].find('div').attrs['data-listingid'])
                     Price.append(''.join(content[i].find('div', class_="price").text.strip().split()[1].split(',')))
                     info = re.findall('\d+', content[i].find('div', class_='room-type').text.strip())
@@ -51,12 +51,19 @@ def get_recent_listing_ids():
 
 # Function to convert time indicator to a timedelta
 def convert_time_indicator(time_str):
-    if 'hour' in time_str:
-        hours = int(time_str.split()[0])
-        return timedelta(hours=hours)
+    time_value = int(time_str.split()[0])
+
+    if 'minute' in time_str:
+        return timedelta(minutes=time_value)
+    elif 'hour' in time_str:
+        return timedelta(hours=time_value)
     elif 'day' in time_str:
-        days = int(time_str.split()[0])
-        return timedelta(days=days)
+        return timedelta(days=time_value)
+    elif 'week' in time_str:
+        return timedelta(weeks=time_value)
+    elif 'month' in time_str:
+        return timedelta(days=time_value * 30)  # Assuming a month is 30 days
+
     return timedelta()
 
 daily_data = get_recent_listing_ids()
