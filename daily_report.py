@@ -10,7 +10,24 @@ from config import baseurl
 
 current_time = datetime.now()
 
-# Function to extract listing IDs posted within the last 24 hours
+# Function to convert time indicator to a timedelta
+def convert_time_indicator(time_str):
+    time_value = int(time_str.split()[0])
+
+    if 'minute' in time_str:
+        return timedelta(minutes=time_value)
+    elif 'hour' in time_str:
+        return timedelta(hours=time_value)
+    elif 'day' in time_str:
+        return timedelta(days=time_value)
+    elif 'week' in time_str:
+        return timedelta(weeks=time_value)
+    elif 'month' in time_str:
+        return timedelta(days=time_value * 30)  # Assuming a month is 30 days
+
+    return timedelta()
+
+# Function to extract listing IDs posted within the last 7 days
 def get_recent_listing_ids():
     Listing_id = []
     Price = []
@@ -32,14 +49,14 @@ def get_recent_listing_ids():
                 listing_time_element = content[i].find('div', class_='address').text.strip()
                 time_diff = convert_time_indicator(listing_time_element)
 
-                if time_diff <= timedelta(days=1):
+                if time_diff <= timedelta(hours=1):
                     Listing_id.append(content[i].find('div').attrs['data-listingid'])
                     Price.append(''.join(content[i].find('div', class_="price").text.strip().split()[1].split(',')))
                     info = re.findall('\d+', content[i].find('div', class_='room-type').text.strip())
                     N_Bedrooms.append(info[1])
                     N_Bathrooms.append(info[2])
                 else:
-                    # Stop scraping when encountering a listing older than 24 hours
+                    # Stop scraping when encountering a listing older than 7 days
                     return pd.DataFrame({'listing_id': Listing_id, 'price': Price, 'N_Bedrooms': N_Bedrooms, 'N_Bathrooms': N_Bathrooms})
 
             page += 1
@@ -49,22 +66,8 @@ def get_recent_listing_ids():
 
     return pd.DataFrame({'listing_id': Listing_id, 'price': Price, 'N_Bedrooms': N_Bedrooms, 'N_Bathrooms': N_Bathrooms})
 
-# Function to convert time indicator to a timedelta
-def convert_time_indicator(time_str):
-    time_value = int(time_str.split()[0])
 
-    if 'minute' in time_str:
-        return timedelta(minutes=time_value)
-    elif 'hour' in time_str:
-        return timedelta(hours=time_value)
-    elif 'day' in time_str:
-        return timedelta(days=time_value)
-    elif 'week' in time_str:
-        return timedelta(weeks=time_value)
-    elif 'month' in time_str:
-        return timedelta(days=time_value * 30)  # Assuming a month is 30 days
 
-    return timedelta()
 
 daily_data = get_recent_listing_ids()
 daily_data = daily_data.drop_duplicates().reset_index(drop=True)
@@ -83,6 +86,8 @@ for list_id in daily_data['listing_id']:
         # Extract the labels and values for the current listing ID
         labels = [label.get_text(strip=True)[:-1] for label in soup_info.find_all('div', class_='details')[0].find_all(name='label')]
         row_values = [value.get_text(strip=True) for value in soup_info.find_all('div', class_='details')[0].find_all(name='div')[:-1]]
+        labels.extend(['lat','long'])
+        row_values.extend([soup_info.find('span', itemprop="longitude").text,soup_info.find('span', itemprop="latitude").text])
 
         # Append unique columns to the columns list
         columns.extend(label for label in labels if label not in columns)
