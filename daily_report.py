@@ -49,7 +49,7 @@ def get_recent_listing_ids():
                 listing_time_element = content[i].find('div', class_='address').text.strip()
                 time_diff = convert_time_indicator(listing_time_element)
 
-                if time_diff <= timedelta(hours=1):
+                if time_diff <= timedelta(days=1):
                     Listing_id.append(content[i].find('div').attrs['data-listingid'])
                     Price.append(''.join(content[i].find('div', class_="price").text.strip().split()[1].split(',')))
                     info = re.findall('\d+', content[i].find('div', class_='room-type').text.strip())
@@ -75,7 +75,8 @@ daily_data = daily_data.drop_duplicates().reset_index(drop=True)
 columns = []
 values = []
 amenities_data = []
-views_data = []
+dates_views_data = []
+
 
 for list_id in daily_data['listing_id']:
     response = requests.get(f'{baseurl}/{list_id}')
@@ -109,9 +110,11 @@ for list_id in daily_data['listing_id']:
         amenities_dict['listing_id'] = list_id
         amenities_data.append(amenities_dict)
 
-        # Extract views information
-        views = re.findall('\d+', soup_info.find('div', class_="posted-and-views").text.split('·')[-1])[0]
-        views_data.append({'listing_id': list_id, 'views': views})
+        # Extract date and views information
+        views = soup_info.find('div', class_="posted-and-views").text.split('·')
+        dates_views_data.append({'listing_id': list_id,
+                                'date': datetime.strptime(re.findall(r'\b\w+ \d{1,2}, \d{4}\b', views[0])[0], "%B %d, %Y"),
+                                'views': re.findall('\d+', views[-1])[0]})
 
     else:
         print(f"Failed to retrieve data for listing ID: {list_id}")
@@ -119,7 +122,7 @@ for list_id in daily_data['listing_id']:
 # Create DataFrames for values, amenities, and views data
 values_df = pd.DataFrame(values)
 amenities_df = pd.DataFrame(amenities_data)
-views_df = pd.DataFrame(views_data)
+views_df = pd.DataFrame(dates_views_data)
 
 # Merge the amenities DataFrame with the original DataFrame on 'listing_id'
 merged_df = pd.merge(daily_data, amenities_df, on='listing_id', how='left')
