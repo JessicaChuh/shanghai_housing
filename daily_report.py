@@ -33,6 +33,7 @@ def get_recent_listing_ids():
     Price = []
     N_Bedrooms = []
     N_Bathrooms = []
+
     page = 0
     while True:
         params = {'page': page}
@@ -49,7 +50,7 @@ def get_recent_listing_ids():
                 listing_time_element = content[i].find('div', class_='address').text.strip()
                 time_diff = convert_time_indicator(listing_time_element)
 
-                if time_diff <= timedelta(days=1):
+                if time_diff <= timedelta(days=7):
                     Listing_id.append(content[i].find('div').attrs['data-listingid'])
                     Price.append(''.join(content[i].find('div', class_="price").text.strip().split()[1].split(',')))
                     info = re.findall('\d+', content[i].find('div', class_='room-type').text.strip())
@@ -67,10 +68,9 @@ def get_recent_listing_ids():
     return pd.DataFrame({'listing_id': Listing_id, 'price': Price, 'N_Bedrooms': N_Bedrooms, 'N_Bathrooms': N_Bathrooms})
 
 
-
-
 daily_data = get_recent_listing_ids()
 daily_data = daily_data.drop_duplicates().reset_index(drop=True)
+daily_data.to_csv(f"{current_time.strftime('%Y%m%d')}_brief.csv", index=False)
 
 columns = []
 values = []
@@ -112,9 +112,12 @@ for list_id in daily_data['listing_id']:
 
         # Extract date and views information
         views = soup_info.find('div', class_="posted-and-views").text.split('·')
-        dates_views_data.append({'listing_id': list_id,
-                                'date': datetime.strptime(re.findall(r'\b\w+ \d{1,2}, \d{4}\b', views[0])[0], "%B %d, %Y"),
-                                'views': re.findall('\d+', views[-1])[0]})
+        try:
+            dates_views_data.append({'listing_id': list_id,
+                                    'date': datetime.strptime(re.findall(r'\b\w+ +\d{1,2}, \d{4}\b', views[0])[0], "%B %d, %Y"),
+                                    'views': re.findall('\d+', views[-1])[0]})
+        except IndexError:
+            print(f"Listing ID {list_id}: Error")
 
     else:
         print(f"Failed to retrieve data for listing ID: {list_id}")
@@ -126,9 +129,10 @@ views_df = pd.DataFrame(dates_views_data)
 
 # Merge the amenities DataFrame with the original DataFrame on 'listing_id'
 merged_df = pd.merge(daily_data, amenities_df, on='listing_id', how='left')
-
-# Merge the views DataFrame with the merged DataFrame on 'listing_id'
 merged_df = pd.merge(merged_df, views_df, on='listing_id', how='left')
+
+merged_df.drop(index=merged_df[merged_df['date'].isnull()].index,inplace=True)
+merged_df = merged_df.reset_index(drop=True)
 
 # Concatenate the merged DataFrame with the values DataFrame
 final_df = pd.concat([merged_df, values_df], axis=1)
@@ -150,12 +154,14 @@ for column in columns_to_clean:
     clean_column_data(final_df, column)
 
 final_df['MetroStation'] = final_df['MetroStation'].str.split('to').str[1].str.split('on ').str[0].str.strip()
+final_df['MetroStation'] = final_df['MetroStation'].replace('Jiao', 'JiaoTong Uni')
+final_df['MetroStation'] = final_df['MetroStation'].replace('Tian', 'Tianzifang')
 
 # Keep only 'PetsAllowedtrue' column and rename it to 'PetsAllowed'
 final_df['PetsAllowed'] = final_df['PetsAllowedtrue']
 
 # Drop 'PetsAllowedtrue' column
-final_df.drop(columns=['PetsAllowedtrue','Rooms'], inplace=True)
+final_df.drop(columns=['PetsAllowedtrue','PetsAllowedfalse','Rooms'], inplace=True)
 
 # Fill NaN values in the 'PetsAllowed' column with 0
 final_df['PetsAllowed'] = final_df['PetsAllowed'].fillna(0)
