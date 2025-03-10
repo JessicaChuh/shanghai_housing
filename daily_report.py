@@ -76,6 +76,7 @@ columns = []
 values = []
 amenities_data = []
 dates_views_data = []
+fail = []
 
 
 for list_id in daily_data['listing_id']:
@@ -121,6 +122,10 @@ for list_id in daily_data['listing_id']:
 
     else:
         print(f"Failed to retrieve data for listing ID: {list_id}")
+        fail.append(list_id)
+
+daily_data.drop(index=daily_data[daily_data['listing_id'].isin(fail)].index,inplace=True)
+daily_data.to_csv(f"{current_time.strftime('%Y%m%d')}_brief.csv", index=False)
 
 # Create DataFrames for values, amenities, and views data
 values_df = pd.DataFrame(values)
